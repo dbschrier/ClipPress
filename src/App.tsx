@@ -10,6 +10,8 @@ export function App() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'downloading' | 'ready'>('idle')
+  const [updatePercent, setUpdatePercent] = useState(0)
 
   const {
     clips,
@@ -26,6 +28,14 @@ export function App() {
     goPrev,
     goTo,
   } = useClips()
+
+  useEffect(() => {
+    const unsub = window.electron.onUpdateStatus(({ status, percent }) => {
+      setUpdateStatus(status)
+      setUpdatePercent(percent)
+    })
+    return unsub
+  }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -97,6 +107,25 @@ export function App() {
         />
       </div>
       {toast && <div className="toast">{toast}</div>}
+      {updateStatus !== 'idle' && (
+        <div className="update-banner">
+          {updateStatus === 'downloading' ? (
+            <>
+              <span className="update-banner__label">Update downloading… {updatePercent}%</span>
+              <div className="update-banner__track">
+                <div className="update-banner__fill" style={{ width: `${updatePercent}%` }} />
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="update-banner__label">Update ready</span>
+              <button className="update-banner__btn" onClick={() => window.electron.restartAndInstall()}>
+                Restart
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

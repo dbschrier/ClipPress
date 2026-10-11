@@ -15,6 +15,8 @@ declare global {
       saveNote: (dir: string, filename: string, notes: string) => Promise<void>
       copyDiscord: (discordPath: string) => Promise<void>
       onCompressProgress: (cb: (data: { mp4Filename: string; percent: number }) => void) => () => void
+      onUpdateStatus: (cb: (data: { status: 'downloading' | 'ready'; percent: number }) => void) => () => void
+      restartAndInstall: () => Promise<void>
       onDiscordReady: (cb: (data: {
         mp4Filename: string
         discordPath: string

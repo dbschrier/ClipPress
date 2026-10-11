@@ -269,6 +269,10 @@ ipcMain.handle('clips:copy-discord', async (_event, discordFilePath: string) => 
   clipboardEx.writeFilePaths([discordFilePath])
 })
 
+ipcMain.handle('app:restart-and-install', () => {
+  autoUpdater.quitAndInstall()
+})
+
 app.whenReady().then(() => {
   // When packaged, ffmpeg binary lives in app.asar.unpacked — resolve path after app is ready
   const resolvedFfmpegPath = ffmpegPath
@@ -279,7 +283,18 @@ app.whenReady().then(() => {
   Menu.setApplicationMenu(null)
   createWindow()
 
-  autoUpdater.checkForUpdatesAndNotify()
+  if (app.isPackaged) {
+    autoUpdater.on('download-progress', (progress) => {
+      mainWindow?.webContents.send('app:update-status', {
+        status: 'downloading',
+        percent: Math.round(progress.percent),
+      })
+    })
+    autoUpdater.on('update-downloaded', () => {
+      mainWindow?.webContents.send('app:update-status', { status: 'ready', percent: 100 })
+    })
+    autoUpdater.checkForUpdates()
+  }
 })
 
 app.on('window-all-closed', () => {
