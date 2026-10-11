@@ -111,7 +111,7 @@ async function compressForDiscord(
     const totalKbps = Math.floor((DISCORD_TARGET_BYTES * 8) / duration / 1000)
     const videoKbps = Math.max(totalKbps - step.audioBr, 150)
     await runFfmpegCompress(mp4Path, outPath, videoKbps, step.audioBr, step.scale, onProgress)
-    if (statSync(outPath).size <= 25 * 1024 * 1024) return
+    if (statSync(outPath).size <= 20 * 1024 * 1024) return
   }
 }
 
