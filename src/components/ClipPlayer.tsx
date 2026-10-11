@@ -68,7 +68,7 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
         <div className="clip-player" onContextMenu={handleContextMenu}>
           {!filePath && (
             <div className="player-empty">
-              <img src="/assets/logo.svg" alt="Melee Note Taker" className="player-logo" />
+              <img src="/assets/logo.svg" alt="ClipPress" className="player-logo" />
               <p>Drop a clip here to get started</p>
             </div>
           )}

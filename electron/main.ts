@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
 import { mkdirSync, statSync, existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync, renameSync } from 'fs'
 import ffmpeg from 'fluent-ffmpeg'
@@ -230,7 +231,7 @@ function createWindow() {
 ipcMain.handle('clips:open-directory', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ['openDirectory'],
-    title: 'Select ShadowPlay Clips Folder'
+    title: 'Select Clips Folder'
   })
   if (canceled || filePaths.length === 0) return null
   return openDir(filePaths[0])
@@ -277,6 +278,8 @@ app.whenReady().then(() => {
 
   Menu.setApplicationMenu(null)
   createWindow()
+
+  autoUpdater.checkForUpdatesAndNotify()
 })
 
 app.on('window-all-closed', () => {
