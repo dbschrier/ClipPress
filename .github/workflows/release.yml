@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -22,7 +25,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build and publish release
-        run: npx electron-vite build && npx electron-builder --publish always
+      - name: Build
+        run: npx electron-vite build
+
+      - name: Publish release
+        run: npx electron-builder --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
