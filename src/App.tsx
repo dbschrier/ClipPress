@@ -3,7 +3,7 @@ import { useClips } from './hooks/useClips'
 import { ClipPlayer } from './components/ClipPlayer'
 import type { ClipPlayerHandle } from './components/ClipPlayer'
 import { ClipNavigator } from './components/ClipNavigator'
-import { version } from '../../package.json'
+import { version } from '../package.json'
 import './App.css'
 
 export function App() {
