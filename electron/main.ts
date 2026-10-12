@@ -284,6 +284,8 @@ app.whenReady().then(() => {
   createWindow()
 
   if (app.isPackaged) {
+    // Beta installs check for beta updates; stable installs only get stable
+    autoUpdater.allowPrerelease = app.getVersion().includes('-')
     autoUpdater.on('error', (err) => {
       console.error('[updater] error:', err?.message)
       mainWindow?.webContents.send('app:update-status', { status: 'error', message: err?.message })
