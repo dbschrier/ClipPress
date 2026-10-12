@@ -5,9 +5,6 @@ type ShareStatus = 'pending' | 'converting' | 'ready' | 'error'
 contextBridge.exposeInMainWorld('electron', {
   openDirectory: () => ipcRenderer.invoke('clips:open-directory'),
   loadDropped: (filePaths: string[]) => ipcRenderer.invoke('clips:load-dropped', filePaths),
-  loadNotes: (dir: string) => ipcRenderer.invoke('notes:load', dir),
-  saveNote: (dir: string, filename: string, notes: string) =>
-    ipcRenderer.invoke('notes:save', dir, filename, notes),
   copyDiscord: (discordPath: string) => ipcRenderer.invoke('clips:copy-discord', discordPath),
   onDiscordReady: (cb: (data: { mp4Filename: string; discordPath: string; status: ShareStatus }) => void) => {
     const listener = (_e: Electron.IpcRendererEvent, data: { mp4Filename: string; discordPath: string; status: ShareStatus }) => cb(data)

@@ -11,8 +11,6 @@ declare global {
         clips: string[]
         discordPaths: Record<string, string>
       } | null>
-      loadNotes: (dir: string) => Promise<Record<string, { filename: string; notes: string; updatedAt: string }>>
-      saveNote: (dir: string, filename: string, notes: string) => Promise<void>
       copyDiscord: (discordPath: string) => Promise<void>
       onCompressProgress: (cb: (data: { mp4Filename: string; percent: number }) => void) => () => void
       onUpdateStatus: (cb: (data: { status: 'downloading' | 'ready' | 'error'; percent?: number; newVersion?: string | null; message?: string }) => void) => () => void

@@ -1,16 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import type { NotesStore, ShareStatus, ShareStatusMap } from '../types'
+import type { ShareStatus, ShareStatusMap } from '../types'
 
 export function useClips() {
-  const [clipDir, setClipDir] = useState('')
   const [clips, setClips] = useState<string[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [notes, setNotes] = useState<NotesStore>({})
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'unsaved'>('saved')
   const [discordStatus, setDiscordStatus] = useState<ShareStatusMap>({})
   const [discordPaths, setDiscordPaths] = useState<Record<string, string>>({})
   const [compressProgress, setCompressProgress] = useState<Record<string, number>>({})
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const discordUnsubscribe = useRef<(() => void) | null>(null)
   const progressUnsubscribe = useRef<(() => void) | null>(null)
 
@@ -25,14 +21,10 @@ export function useClips() {
     result: { dir: string; clips: string[]; discordPaths: Record<string, string> } | null
   ) => {
     if (!result) return
-    const { dir, clips: newClips, discordPaths: existingDiscordPaths } = result
+    const { clips: newClips, discordPaths: existingDiscordPaths } = result
 
-    setClipDir(dir)
     setClips(newClips)
     setCurrentIndex(0)
-    const loaded = await window.electron.loadNotes(dir)
-    setNotes(loaded)
-    setSaveStatus('saved')
 
     const filenames = new Set(newClips.map(p => p.split(/[\\/]/).pop()!))
     const initialStatus: ShareStatusMap = {}
@@ -41,6 +33,7 @@ export function useClips() {
     })
     setDiscordStatus(initialStatus)
     setDiscordPaths(existingDiscordPaths)
+    setCompressProgress({})
 
     discordUnsubscribe.current = window.electron.onDiscordReady(({ mp4Filename, discordPath, status }) => {
       if (!filenames.has(mp4Filename)) return
@@ -61,10 +54,6 @@ export function useClips() {
   }, [])
 
   const cleanup = useCallback(() => {
-    if (saveTimer.current) {
-      clearTimeout(saveTimer.current)
-      saveTimer.current = null
-    }
     if (discordUnsubscribe.current) {
       discordUnsubscribe.current()
       discordUnsubscribe.current = null
@@ -108,37 +97,14 @@ export function useClips() {
     setCurrentIndex(index)
   }, [])
 
-  const saveNote = useCallback((text: string) => {
-    if (!clipDir || clips.length === 0) return
-    const filename = clips[currentIndex].split(/[\\/]/).pop()!
-
-    setNotes(prev => ({
-      ...prev,
-      [filename]: { filename, notes: text, updatedAt: new Date().toISOString() }
-    }))
-
-    setSaveStatus('unsaved')
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    const savedFilename = filename
-    saveTimer.current = setTimeout(() => {
-      window.electron.saveNote(clipDir, savedFilename, text).then(() => {
-        setSaveStatus(prev => prev === 'unsaved' ? 'saved' : prev)
-      })
-    }, 500)
-  }, [clipDir, clips, currentIndex])
-
   const currentClip = clips[currentIndex] ?? null
   const currentFilename = currentClip?.split(/[\\/]/).pop() ?? ''
-  const currentNote = currentFilename ? (notes[currentFilename]?.notes ?? '') : ''
 
   return {
-    clipDir,
     clips,
     currentIndex,
     currentClip,
     currentFilename,
-    currentNote,
-    saveStatus,
     discordStatus,
     discordPaths,
     compressProgress,
@@ -147,6 +113,5 @@ export function useClips() {
     goNext,
     goPrev,
     goTo,
-    saveNote,
   }
 }

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
-import { mkdirSync, statSync, existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync, renameSync } from 'fs'
+import { mkdirSync, statSync, existsSync, readdirSync, unlinkSync, renameSync } from 'fs'
 import ffmpeg from 'fluent-ffmpeg'
 import ffmpegPath from 'ffmpeg-static'
 // @ts-ignore — no types for electron-clipboard-ex
@@ -10,14 +10,6 @@ import clipboardEx from 'electron-clipboard-ex'
 let mainWindow: BrowserWindow | null = null
 
 // --- Types ---
-
-interface ClipNote {
-  filename: string
-  notes: string
-  updatedAt: string
-}
-
-type NotesStore = Record<string, ClipNote>
 
 type CompressTask = {
   mp4Path: string
@@ -243,27 +235,6 @@ ipcMain.handle('clips:load-dropped', async (_event, filePaths: string[]) => {
   return loadDropped(filePaths)
 })
 
-ipcMain.handle('notes:load', async (_event, dir: string) => {
-  const notesPath = join(dir, 'notes.json')
-  if (!existsSync(notesPath)) return {}
-  try {
-    return JSON.parse(readFileSync(notesPath, 'utf8')) as NotesStore
-  } catch {
-    return {}
-  }
-})
-
-ipcMain.handle('notes:save', async (_event, dir: string, filename: string, notes: string) => {
-  const notesPath = join(dir, 'notes.json')
-  let store: NotesStore = {}
-  if (existsSync(notesPath)) {
-    try {
-      store = JSON.parse(readFileSync(notesPath, 'utf8'))
-    } catch { /* start fresh if corrupt */ }
-  }
-  store[filename] = { filename, notes, updatedAt: new Date().toISOString() }
-  writeFileSync(notesPath, JSON.stringify(store, null, 2), 'utf8')
-})
 
 ipcMain.handle('clips:copy-discord', async (_event, discordFilePath: string) => {
   clipboardEx.writeFilePaths([discordFilePath])

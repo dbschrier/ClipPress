@@ -8,6 +8,7 @@ interface ClipNavigatorProps {
   onPrev: () => void
   onNext: () => void
   discordStatus: ShareStatusMap
+  compressProgress: Record<string, number>
   version: string
   newVersion: string | null
 }
@@ -16,7 +17,7 @@ function getFilename(path: string): string {
   return (path.split(/[\\/]/).pop() ?? path).replace(/\.mp4$/i, '')
 }
 
-export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, onNext, discordStatus, version, newVersion }: ClipNavigatorProps) {
+export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, onNext, discordStatus, compressProgress, version, newVersion }: ClipNavigatorProps) {
   return (
     <div className="clip-navigator">
       <div className="nav-header">
@@ -32,6 +33,7 @@ export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, o
             const filename = getFilename(clip)
             const raw = (clip.split(/[\\/]/).pop() ?? clip)
             const status = discordStatus[raw] ?? 'pending'
+            const pct = compressProgress[raw]
             return (
               <li
                 key={clip}
@@ -39,7 +41,10 @@ export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, o
                 onClick={() => onSelect(i)}
               >
                 <span className="clip-name">{filename}</span>
-                <span className={`share-badge share-badge--${status}`} />
+                {status === 'converting' && pct != null
+                  ? <span className="clip-progress">{pct}%</span>
+                  : <span className={`share-badge share-badge--${status}`} />
+                }
               </li>
             )
           })}

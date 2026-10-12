@@ -130,6 +130,15 @@ body {
   flex-shrink: 0;
 }
 
+.clip-progress {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ef9100;
+  font-family: ui-monospace, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 .share-badge--ready      { background: #76b900; }
 .share-badge--converting { background: #ef9100; }
 .share-badge--pending    { background: #222222; }

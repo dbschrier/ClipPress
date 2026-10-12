@@ -20,7 +20,6 @@ export function App() {
     currentIndex,
     currentClip,
     currentFilename,
-    saveStatus: _saveStatus,
     discordStatus,
     discordPaths,
     compressProgress,
@@ -100,6 +99,7 @@ export function App() {
         onPrev={goPrev}
         onNext={goNext}
         discordStatus={discordStatus}
+        compressProgress={compressProgress}
         version={version}
         newVersion={updateStatus !== 'idle' ? newVersion : null}
       />
