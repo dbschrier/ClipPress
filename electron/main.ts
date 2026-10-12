@@ -284,6 +284,16 @@ app.whenReady().then(() => {
   createWindow()
 
   if (app.isPackaged) {
+    autoUpdater.on('error', (err) => {
+      console.error('[updater] error:', err?.message)
+      mainWindow?.webContents.send('app:update-status', { status: 'error', message: err?.message })
+    })
+    autoUpdater.on('update-available', () => {
+      console.log('[updater] update available, downloading...')
+    })
+    autoUpdater.on('update-not-available', () => {
+      console.log('[updater] already up to date')
+    })
     autoUpdater.on('download-progress', (progress) => {
       mainWindow?.webContents.send('app:update-status', {
         status: 'downloading',
@@ -293,7 +303,9 @@ app.whenReady().then(() => {
     autoUpdater.on('update-downloaded', () => {
       mainWindow?.webContents.send('app:update-status', { status: 'ready', percent: 100 })
     })
-    autoUpdater.checkForUpdates()
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.error('[updater] checkForUpdates failed:', err?.message)
+    })
   }
 })
 

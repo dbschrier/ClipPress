@@ -10,7 +10,7 @@ export function App() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [updateStatus, setUpdateStatus] = useState<'idle' | 'downloading' | 'ready'>('idle')
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'downloading' | 'ready' | 'error'>('idle')
   const [updatePercent, setUpdatePercent] = useState(0)
 
   const {
@@ -30,9 +30,10 @@ export function App() {
   } = useClips()
 
   useEffect(() => {
-    const unsub = window.electron.onUpdateStatus(({ status, percent }) => {
+    const unsub = window.electron.onUpdateStatus(({ status, percent, message }) => {
       setUpdateStatus(status)
-      setUpdatePercent(percent)
+      if (percent !== undefined) setUpdatePercent(percent)
+      if (status === 'error') showToast(`Update error: ${message ?? 'unknown'}`)
     })
     return unsub
   }, [])

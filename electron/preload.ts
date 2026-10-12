@@ -19,8 +19,8 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('clips:compress-progress', listener)
     return () => ipcRenderer.removeListener('clips:compress-progress', listener)
   },
-  onUpdateStatus: (cb: (data: { status: 'downloading' | 'ready'; percent: number }) => void) => {
-    const listener = (_e: Electron.IpcRendererEvent, data: { status: 'downloading' | 'ready'; percent: number }) => cb(data)
+  onUpdateStatus: (cb: (data: { status: 'downloading' | 'ready' | 'error'; percent?: number; message?: string }) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, data: { status: 'downloading' | 'ready' | 'error'; percent?: number; message?: string }) => cb(data)
     ipcRenderer.on('app:update-status', listener)
     return () => ipcRenderer.removeListener('app:update-status', listener)
   },
