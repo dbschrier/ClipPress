@@ -9,6 +9,8 @@
     "preview": "electron-vite preview",
     "generate-icon": "node scripts/generate-icon.mjs",
     "dist": "electron-vite build && electron-builder",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
