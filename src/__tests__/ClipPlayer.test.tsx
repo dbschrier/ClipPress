@@ -121,7 +121,7 @@ describe('right-click context menu', () => {
       onCopyAttempt,
     })
 
-    fireEvent.contextMenu(screen.getByRole('region', { hidden: true }) ?? document.querySelector('.clip-player')!)
+    fireEvent.contextMenu(document.querySelector('.clip-player')!)
 
     await vi.waitFor(() => {
       expect(window.electron.copyDiscord).toHaveBeenCalledWith('/clips/_discord/a.mp4')

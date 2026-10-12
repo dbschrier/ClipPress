@@ -34,7 +34,7 @@ export function useClips() {
     setNotes(loaded)
     setSaveStatus('saved')
 
-    const filenames = newClips.map(p => p.split(/[\\/]/).pop()!)
+    const filenames = new Set(newClips.map(p => p.split(/[\\/]/).pop()!))
     const initialStatus: ShareStatusMap = {}
     filenames.forEach(f => {
       initialStatus[f] = existingDiscordPaths[f] ? 'ready' : 'pending'
@@ -43,6 +43,7 @@ export function useClips() {
     setDiscordPaths(existingDiscordPaths)
 
     discordUnsubscribe.current = window.electron.onDiscordReady(({ mp4Filename, discordPath, status }) => {
+      if (!filenames.has(mp4Filename)) return
       setDiscordStatus(prev => ({ ...prev, [mp4Filename]: status }))
       if (status === 'ready') {
         setDiscordPaths(prev => ({ ...prev, [mp4Filename]: discordPath }))
@@ -51,9 +52,8 @@ export function useClips() {
     })
 
     progressUnsubscribe.current = window.electron.onCompressProgress(({ mp4Filename, percent }) => {
+      if (!filenames.has(mp4Filename)) return
       setCompressProgress(prev => ({ ...prev, [mp4Filename]: percent }))
-      // If the 'converting' IPC event was missed due to a race with subscription setup,
-      // promote pending → converting when the first progress tick arrives.
       setDiscordStatus(prev =>
         prev[mp4Filename] === 'pending' ? { ...prev, [mp4Filename]: 'converting' } : prev
       )
