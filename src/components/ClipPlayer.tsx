@@ -1,6 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { ShareStatus } from '../types'
-import logoUrl from '../assets/logo.svg'
 
 interface ClipPlayerProps {
   filePath: string | null
@@ -67,7 +66,9 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
         <div className="clip-player" onContextMenu={handleContextMenu}>
           {!filePath && (
             <div className="player-empty">
-              <img src={logoUrl} alt="ClipPress" className="player-logo" />
+              <svg className="player-empty__icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="22,14 22,86 90,50" fill="#76b900"/>
+              </svg>
               <p>Drop a clip here to get started</p>
             </div>
           )}

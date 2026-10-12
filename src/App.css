@@ -318,18 +318,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  color: #5e5e5e;
+  gap: 20px;
+  color: #3a3a3a;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 700;
+  border: 1px dashed #2a2a2a;
+  border-radius: 4px;
+  padding: 48px 64px;
 }
 
-.player-logo {
-  width: 64px;
-  height: 64px;
-  opacity: 0.25;
+.player-empty__icon {
+  width: 56px;
+  height: 56px;
+  opacity: 0.35;
 }
 
 /* --- Notes Panel --- */
