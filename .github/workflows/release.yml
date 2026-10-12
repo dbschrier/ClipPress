@@ -31,6 +31,9 @@ jobs:
       - name: Package
         run: npx electron-builder --publish never
 
+      - name: Validate OTA artifacts
+        run: node scripts/validate-release.mjs
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
