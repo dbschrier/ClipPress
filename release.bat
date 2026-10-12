@@ -16,6 +16,11 @@ if "%CHANNEL%"=="beta" (
   echo Build passed. Releasing stable...
   call npm version patch
 )
+if %errorlevel% neq 0 (
+  echo.
+  echo Version bump failed. Is the working tree clean? Run: git status
+  exit /b 1
+)
 
 git push
 git push --tags
