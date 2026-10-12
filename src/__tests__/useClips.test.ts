@@ -45,12 +45,10 @@ beforeEach(() => {
   progressListeners = []
 
   window.electron = {
-    openDirectory:    vi.fn(),
-    loadDropped:      vi.fn(),
-    loadNotes:        vi.fn().mockResolvedValue({}),
-    saveNote:         vi.fn().mockResolvedValue(undefined),
-    copyDiscord:      vi.fn().mockResolvedValue(undefined),
-    onUpdateStatus:   vi.fn(() => vi.fn()),
+    openDirectory:     vi.fn(),
+    loadDropped:       vi.fn(),
+    copyDiscord:       vi.fn().mockResolvedValue(undefined),
+    onUpdateStatus:    vi.fn(() => vi.fn()),
     restartAndInstall: vi.fn(),
     onDiscordReady: vi.fn((cb: DiscordReadyCb) => {
       discordReadyListeners.push(cb)
