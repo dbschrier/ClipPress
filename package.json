@@ -29,7 +29,7 @@
     "publish": {
       "provider": "github",
       "owner": "dbschrier",
-      "repo": "clippress"
+      "repo": "ClipPress"
     },
     "win": {
       "target": [
