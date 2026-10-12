@@ -34,6 +34,19 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
+          name: ClipPress ${{ github.ref_name }}
+          body: |
+            ## Install
+
+            Download and run **ClipPress Setup.exe** below.
+
+            Windows will show a security warning the first time — click **More info → Run anyway**.
+
+            ---
+
+            Already installed? You'll get this update automatically next time you open the app.
+
+            > `latest.yml` and `.exe.blockmap` are used for automatic updates — you don't need to download them.
           files: |
             dist/*.exe
             dist/*.exe.blockmap
