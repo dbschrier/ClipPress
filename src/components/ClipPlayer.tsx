@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { ShareStatus } from '../types'
+import logoUrl from '../assets/logo.svg'
 
 interface ClipPlayerProps {
   filePath: string | null
@@ -50,14 +51,12 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
     const isError = discordStatus === 'error'
 
     const statusLabel = !filePath
-      ? 'Drop a clip here to compress for Discord'
-      : isConverting
-        ? `Compressing for Discord… ${progress}%`
-        : isReady
-          ? 'Ready — already copied to clipboard'
-          : isError
-            ? 'Compression failed'
-            : 'Waiting to compress'
+      ? 'Drop a clip here to get started'
+      : isReady
+        ? 'Copied to clipboard — paste into Discord'
+        : isError
+          ? 'Compression failed'
+          : 'Waiting to compress'
 
     const statusMod = !filePath || discordStatus === 'pending'
       ? 'idle'
@@ -68,7 +67,7 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
         <div className="clip-player" onContextMenu={handleContextMenu}>
           {!filePath && (
             <div className="player-empty">
-              <img src="/assets/logo.svg" alt="ClipPress" className="player-logo" />
+              <img src={logoUrl} alt="ClipPress" className="player-logo" />
               <p>Drop a clip here to get started</p>
             </div>
           )}
@@ -79,17 +78,24 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
           />
         </div>
 
-        <div className={`discord-status discord-status--${statusMod}`}>
-          <span className="discord-status__label">{statusLabel}</span>
-          {isConverting && (
-            <div className="progress-bar-track">
+        {isConverting ? (
+          <div className="compress-progress">
+            <div className="compress-progress__header">
+              <span className="compress-progress__label">Compressing for Discord</span>
+              <span className="compress-progress__percent">{progress}%</span>
+            </div>
+            <div className="compress-progress__track">
               <div
-                className="progress-bar-fill"
+                className="compress-progress__fill"
                 style={{ width: `${progress}%` }}
               />
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className={`discord-status discord-status--${statusMod}`}>
+            <span className="discord-status__label">{statusLabel}</span>
+          </div>
+        )}
       </div>
     )
   }
