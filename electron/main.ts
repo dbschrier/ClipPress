@@ -23,8 +23,8 @@ const getDiscordDir = (dir: string) => join(dir, '_discord')
 const getDiscordPath = (dir: string, filename: string) =>
   join(getDiscordDir(dir), filename) // keeps .mp4 extension
 
-// Target 19MB — gives reliable headroom under 25MB even with container overhead
-const DISCORD_TARGET_BYTES = 19 * 1024 * 1024
+// Target 17.5MB — ~10% headroom covers container overhead and encoder overshoot
+const DISCORD_TARGET_BYTES = 17.5 * 1024 * 1024
 
 function getVideoDuration(mp4Path: string): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -54,8 +54,8 @@ function runFfmpegCompress(
       .videoBitrate(videoBitrateKbps)
       .outputOptions([
         `-maxrate ${videoBitrateKbps}k`,
-        `-bufsize ${videoBitrateKbps}k`,
-        '-preset fast',
+        `-bufsize ${videoBitrateKbps * 2}k`,
+        '-preset medium',
         '-movflags +faststart',
         '-y',
       ])
