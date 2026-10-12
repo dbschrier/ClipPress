@@ -16,6 +16,8 @@ function renderNav(overrides: {
   discordStatus?: ShareStatusMap
   compressProgress?: Record<string, number>
   onSelect?: (i: number) => void
+  onPrev?: () => void
+  onNext?: () => void
   version?: string
   newVersion?: string | null
 } = {}) {
@@ -133,6 +135,65 @@ describe('compression progress in sidebar', () => {
     })
     expect(screen.queryByText('100%')).not.toBeInTheDocument()
     expect(document.querySelector('.share-badge--ready')).toBeInTheDocument()
+  })
+})
+
+// --- Header / brand ---
+
+describe('header', () => {
+  it('shows ClipPress brand name', () => {
+    renderNav()
+    expect(screen.getByText('ClipPress')).toBeInTheDocument()
+  })
+
+  it('shows clip count when list is non-empty', () => {
+    renderNav()
+    expect(document.querySelector('.nav-brand__count')).toHaveTextContent('3')
+  })
+
+  it('hides clip count when list is empty', () => {
+    renderNav({ clips: [] })
+    expect(document.querySelector('.nav-brand__count')).not.toBeInTheDocument()
+  })
+})
+
+// --- Navigation buttons ---
+
+describe('navigation buttons', () => {
+  it('renders prev and next as single-glyph buttons', () => {
+    renderNav({ currentIndex: 1 })
+    expect(screen.getByRole('button', { name: /previous clip/i })).toHaveTextContent('‹')
+    expect(screen.getByRole('button', { name: /next clip/i })).toHaveTextContent('›')
+  })
+
+  it('prev is disabled on the first clip', () => {
+    renderNav({ currentIndex: 0 })
+    expect(screen.getByRole('button', { name: /previous clip/i })).toBeDisabled()
+  })
+
+  it('next is disabled on the last clip', () => {
+    renderNav({ currentIndex: 2 })
+    expect(screen.getByRole('button', { name: /next clip/i })).toBeDisabled()
+  })
+
+  it('both buttons are disabled when the list is empty', () => {
+    renderNav({ clips: [], currentIndex: 0 })
+    expect(screen.getByRole('button', { name: /previous clip/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /next clip/i })).toBeDisabled()
+  })
+
+  it('calls onPrev when the prev button is clicked', async () => {
+    const onPrev = vi.fn()
+    renderNav({ currentIndex: 1, onPrev })
+    await userEvent.click(screen.getByRole('button', { name: /previous clip/i }))
+    expect(onPrev).toHaveBeenCalledOnce()
+  })
+
+  it('calls onNext when the next button is clicked', async () => {
+    const onNext = vi.fn()
+    renderNav({ currentIndex: 1, onNext })
+    await userEvent.click(screen.getByRole('button', { name: /next clip/i }))
+    expect(onNext).toHaveBeenCalledOnce()
   })
 })
 

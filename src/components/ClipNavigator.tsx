@@ -21,7 +21,11 @@ export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, o
   return (
     <div className="clip-navigator">
       <div className="nav-header">
-        <span className="nav-section-label">Clips {clips.length > 0 ? `(${clips.length})` : ''}</span>
+        <div className="nav-brand">
+          <span className="nav-brand__dot">●</span>
+          <span className="nav-brand__name">ClipPress</span>
+          {clips.length > 0 && <span className="nav-brand__count">{clips.length}</span>}
+        </div>
         <button className="open-btn" onClick={onOpen}>Open</button>
       </div>
 
@@ -52,14 +56,17 @@ export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, o
       )}
 
       <div className="nav-footer">
-        <button onClick={onPrev} disabled={currentIndex === 0 || clips.length === 0}>← Prev</button>
+        <button className="nav-btn-prev" onClick={onPrev} disabled={currentIndex === 0 || clips.length === 0} aria-label="Previous clip">‹</button>
         <span className="nav-counter">
           {clips.length > 0 ? `${currentIndex + 1} / ${clips.length}` : '—'}
         </span>
-        <button onClick={onNext} disabled={currentIndex >= clips.length - 1 || clips.length === 0}>Next →</button>
+        <button className="nav-btn-next" onClick={onNext} disabled={currentIndex >= clips.length - 1 || clips.length === 0} aria-label="Next clip">›</button>
       </div>
       <div className="nav-version">
-        {newVersion ? `v${version} → v${newVersion}` : `v${version}`}
+        {newVersion
+          ? <span className="nav-version--update">v{version} → v{newVersion}</span>
+          : `v${version}`
+        }
       </div>
     </div>
   )

@@ -46,18 +46,17 @@ export function App() {
     toastTimer.current = setTimeout(() => setToast(null), 3000)
   }
 
-  // Auto-copy to clipboard when the current clip finishes compressing
+  // Auto-copy the current clip when it finishes compressing.
   const prevStatusRef = useRef<Record<string, string>>({})
   useEffect(() => {
-    const curr = discordStatus[currentFilename]
     const prev = prevStatusRef.current[currentFilename]
+    const curr = discordStatus[currentFilename]
     if (curr === 'ready' && prev !== 'ready' && currentFilename) {
       const path = discordPaths[currentFilename]
       if (path) {
-        const wasAlreadyReady = prev === undefined
         window.electron.copyDiscord(path)
-          .then(() => showToast(wasAlreadyReady ? 'Copied to clipboard' : 'Compressed — paste into Discord'))
-          .catch(() => showToast('Clipboard copy failed'))
+          .then(() => showToast('Copied to clipboard'))
+          .catch(() => showToast('Copy failed'))
       }
     }
     prevStatusRef.current = { ...discordStatus }
@@ -94,7 +93,16 @@ export function App() {
       <ClipNavigator
         clips={clips}
         currentIndex={currentIndex}
-        onSelect={goTo}
+        onSelect={(i) => {
+          goTo(i)
+          const filename = clips[i]?.split(/[\\/]/).pop() ?? ''
+          const path = discordPaths[filename]
+          if (path && discordStatus[filename] === 'ready') {
+            window.electron.copyDiscord(path)
+              .then(() => showToast('Copied to clipboard'))
+              .catch(() => showToast('Copy failed'))
+          }
+        }}
         onOpen={openDirectory}
         onPrev={goPrev}
         onNext={goNext}

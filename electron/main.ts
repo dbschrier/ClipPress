@@ -146,22 +146,22 @@ async function drainQueue(): Promise<void> {
   isCompressing = false
 }
 
-// Queue specific files for compression (not the whole directory)
-function queueFiles(filePaths: string[]) {
+// Queue files for compression. Pass force=true to skip the "already done" check.
+function queueFiles(filePaths: string[], force = false) {
   if (filePaths.length === 0) return
   const dir = join(filePaths[0], '..')
   mkdirSync(getDiscordDir(dir), { recursive: true })
   for (const mp4Path of filePaths) {
     const filename = mp4Path.split(/[\\/]/).pop()!
     const out = getDiscordPath(dir, filename)
-    if (!existsSync(out)) {
+    if (force || !existsSync(out)) {
       compressionQueue.push({ mp4Path, discordOut: out, filename })
     }
   }
   drainQueue()
 }
 
-// --- Directory-open logic (no auto-compress — browse only) ---
+// --- Directory-open logic ---
 
 function openDir(dir: string): { dir: string; clips: string[]; discordPaths: Record<string, string> } {
   const filenames = readdirSync(dir)
@@ -175,24 +175,17 @@ function openDir(dir: string): { dir: string; clips: string[]; discordPaths: Rec
     if (existsSync(dp)) discordPaths[filename] = dp
   }
 
+  queueFiles(clips, true) // always re-compress
+
   return { dir, clips, discordPaths }
 }
 
-// --- Dropped-files logic (compress only the dropped files) ---
+// --- Dropped-files logic ---
 
 function loadDropped(filePaths: string[]): { dir: string; clips: string[]; discordPaths: Record<string, string> } {
   const dir = join(filePaths[0], '..')
-
-  queueFiles(filePaths)
-
-  const discordPaths: Record<string, string> = {}
-  for (const fp of filePaths) {
-    const filename = fp.split(/[\\/]/).pop()!
-    const dp = getDiscordPath(dir, filename)
-    if (existsSync(dp)) discordPaths[filename] = dp
-  }
-
-  return { dir, clips: filePaths, discordPaths }
+  queueFiles(filePaths, true) // always re-compress on drag & drop
+  return { dir, clips: filePaths, discordPaths: {} }
 }
 
 // --- Window ---

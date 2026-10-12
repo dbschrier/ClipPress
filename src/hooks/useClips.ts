@@ -7,68 +7,87 @@ export function useClips() {
   const [discordStatus, setDiscordStatus] = useState<ShareStatusMap>({})
   const [discordPaths, setDiscordPaths] = useState<Record<string, string>>({})
   const [compressProgress, setCompressProgress] = useState<Record<string, number>>({})
-  const discordUnsubscribe = useRef<(() => void) | null>(null)
-  const progressUnsubscribe = useRef<(() => void) | null>(null)
 
+  // Mirror of clips kept in a ref so applyResult can read it without stale closures.
+  const clipsRef = useRef<string[]>([])
+
+  // Single persistent pair of IPC listeners for the lifetime of the component.
+  // The `mp4Filename in prev` guard scopes events to filenames we actually track,
+  // replacing the old per-session filenames Set.
   useEffect(() => {
-    return () => {
-      if (discordUnsubscribe.current) discordUnsubscribe.current()
-      if (progressUnsubscribe.current) progressUnsubscribe.current()
-    }
-  }, [])
-
-  const processDirectoryResult = useCallback(async (
-    result: { dir: string; clips: string[]; discordPaths: Record<string, string> } | null
-  ) => {
-    if (!result) return
-    const { clips: newClips, discordPaths: existingDiscordPaths } = result
-
-    setClips(newClips)
-    setCurrentIndex(0)
-
-    const filenames = new Set(newClips.map(p => p.split(/[\\/]/).pop()!))
-    const initialStatus: ShareStatusMap = {}
-    filenames.forEach(f => {
-      initialStatus[f] = existingDiscordPaths[f] ? 'ready' : 'pending'
-    })
-    setDiscordStatus(initialStatus)
-    setDiscordPaths(existingDiscordPaths)
-    setCompressProgress({})
-
-    discordUnsubscribe.current = window.electron.onDiscordReady(({ mp4Filename, discordPath, status }) => {
-      if (!filenames.has(mp4Filename)) return
-      setDiscordStatus(prev => ({ ...prev, [mp4Filename]: status }))
+    const unsubDiscord = window.electron.onDiscordReady(({ mp4Filename, discordPath, status }) => {
+      setDiscordStatus(prev => {
+        if (!(mp4Filename in prev)) return prev
+        return { ...prev, [mp4Filename]: status as ShareStatus }
+      })
       if (status === 'ready') {
         setDiscordPaths(prev => ({ ...prev, [mp4Filename]: discordPath }))
         setCompressProgress(prev => ({ ...prev, [mp4Filename]: 100 }))
       }
     })
 
-    progressUnsubscribe.current = window.electron.onCompressProgress(({ mp4Filename, percent }) => {
-      if (!filenames.has(mp4Filename)) return
+    const unsubProgress = window.electron.onCompressProgress(({ mp4Filename, percent }) => {
+      setDiscordStatus(prev => {
+        if (!(mp4Filename in prev)) return prev
+        if (prev[mp4Filename] === 'pending') return { ...prev, [mp4Filename]: 'converting' }
+        return prev
+      })
       setCompressProgress(prev => ({ ...prev, [mp4Filename]: percent }))
-      setDiscordStatus(prev =>
-        prev[mp4Filename] === 'pending' ? { ...prev, [mp4Filename]: 'converting' } : prev
-      )
+    })
+
+    return () => {
+      unsubDiscord()
+      unsubProgress()
+    }
+  }, [])
+
+  // Append new clips from a drop or open-directory result.
+  // Duplicate paths are silently skipped.
+  const applyResult = useCallback((
+    result: { clips: string[]; discordPaths: Record<string, string> } | null
+  ) => {
+    if (!result) return
+
+    const { clips: newClips, discordPaths: existingDiscordPaths } = result
+    const current = clipsRef.current
+
+    const existingSet = new Set(current)
+    const unique = newClips.filter(c => !existingSet.has(c))
+    if (unique.length === 0) return
+
+    const next = [...current, ...unique]
+    clipsRef.current = next
+    setClips(next)
+
+    // Navigate to the first new clip that still needs compression.
+    const firstPending = unique.findIndex(p => !existingDiscordPaths[p.split(/[\\/]/).pop()!])
+    setCurrentIndex(current.length + (firstPending >= 0 ? firstPending : 0))
+
+    setDiscordStatus(prev => {
+      const updates: ShareStatusMap = {}
+      for (const p of unique) {
+        const f = p.split(/[\\/]/).pop()!
+        updates[f] = existingDiscordPaths[f] ? 'ready' : 'pending'
+      }
+      return { ...prev, ...updates }
+    })
+
+    setDiscordPaths(prev => ({ ...prev, ...existingDiscordPaths }))
+
+    setCompressProgress(prev => {
+      const resets: Record<string, number> = {}
+      for (const p of unique) {
+        const f = p.split(/[\\/]/).pop()!
+        resets[f] = 0
+      }
+      return { ...prev, ...resets }
     })
   }, [])
 
-  const cleanup = useCallback(() => {
-    if (discordUnsubscribe.current) {
-      discordUnsubscribe.current()
-      discordUnsubscribe.current = null
-    }
-    if (progressUnsubscribe.current) {
-      progressUnsubscribe.current()
-      progressUnsubscribe.current = null
-    }
-  }, [])
-
   const openDirectory = useCallback(async () => {
-    cleanup()
     const result = await window.electron.openDirectory()
-    await processDirectoryResult(result)
-  }, [cleanup, processDirectoryResult])
+    applyResult(result)
+  }, [applyResult])
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
@@ -80,10 +99,9 @@ export function useClips() {
       .map(f => (f as File & { path: string }).path)
       .filter(Boolean)
     if (paths.length === 0) return
-    cleanup()
     const result = await window.electron.loadDropped(paths)
-    await processDirectoryResult(result)
-  }, [cleanup, processDirectoryResult])
+    applyResult(result)
+  }, [applyResult])
 
   const goNext = useCallback(() => {
     setCurrentIndex(i => clips.length === 0 ? 0 : Math.min(i + 1, clips.length - 1))

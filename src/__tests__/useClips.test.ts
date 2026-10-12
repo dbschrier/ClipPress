@@ -61,7 +61,7 @@ beforeEach(() => {
   } as unknown as typeof window.electron
 })
 
-// --- Tests ---
+// --- Initial drop ---
 
 describe('handleDrop — initial state', () => {
   it('new clips start as pending', async () => {
@@ -113,8 +113,10 @@ describe('handleDrop — initial state', () => {
   })
 })
 
-describe('handleDrop — replacing a previous session', () => {
-  it('second drop replaces first drop clips entirely', async () => {
+// --- Accumulation ---
+
+describe('handleDrop — accumulates across drops', () => {
+  it('second drop appends to the first', async () => {
     vi.mocked(window.electron.loadDropped)
       .mockResolvedValueOnce(makeResult(['/clips/a.mp4']))
       .mockResolvedValueOnce(makeResult(['/clips/b.mp4']))
@@ -122,15 +124,26 @@ describe('handleDrop — replacing a previous session', () => {
     const { result } = renderHook(() => useClips())
 
     await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
-    expect(result.current.clips[0]).toContain('a.mp4')
-
     await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/b.mp4'])) })
-    expect(result.current.clips).toHaveLength(1)
-    expect(result.current.clips[0]).toContain('b.mp4')
-    expect(result.current.discordStatus['a.mp4']).toBeUndefined()
+
+    expect(result.current.clips).toHaveLength(2)
+    expect(result.current.clips[0]).toContain('a.mp4')
+    expect(result.current.clips[1]).toContain('b.mp4')
   })
 
-  it('second drop unsubscribes first session listeners — stale events are ignored', async () => {
+  it('duplicate paths are not added twice', async () => {
+    vi.mocked(window.electron.loadDropped)
+      .mockResolvedValue(makeResult(['/clips/a.mp4']))
+
+    const { result } = renderHook(() => useClips())
+
+    await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
+    await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
+
+    expect(result.current.clips).toHaveLength(1)
+  })
+
+  it('events for clips from earlier drops are still handled', async () => {
     vi.mocked(window.electron.loadDropped)
       .mockResolvedValueOnce(makeResult(['/clips/a.mp4']))
       .mockResolvedValueOnce(makeResult(['/clips/b.mp4']))
@@ -140,21 +153,31 @@ describe('handleDrop — replacing a previous session', () => {
     await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
     await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/b.mp4'])) })
 
-    // Fire a ready event for a.mp4 — belongs to the old session, should be ignored
-    act(() => { emitDiscordReady({ mp4Filename: 'a.mp4', discordPath: '/x', status: 'ready' }) })
+    // a.mp4 from the first drop should still receive events
+    act(() => { emitDiscordReady({ mp4Filename: 'a.mp4', discordPath: '/x/a.mp4', status: 'ready' }) })
 
-    expect(result.current.discordStatus['a.mp4']).toBeUndefined()
+    expect(result.current.discordStatus['a.mp4']).toBe('ready')
     expect(result.current.discordStatus['b.mp4']).toBe('pending')
   })
+
+  it('events for unknown filenames are ignored', async () => {
+    vi.mocked(window.electron.loadDropped).mockResolvedValue(makeResult(['/clips/a.mp4']))
+    const { result } = renderHook(() => useClips())
+    await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
+
+    act(() => { emitDiscordReady({ mp4Filename: 'unknown.mp4', discordPath: '/x', status: 'ready' }) })
+
+    expect(result.current.discordStatus['unknown.mp4']).toBeUndefined()
+  })
 })
+
+// --- Compression events ---
 
 describe('compression events', () => {
   it('first progress tick promotes pending → converting', async () => {
     vi.mocked(window.electron.loadDropped).mockResolvedValue(makeResult(['/clips/a.mp4']))
     const { result } = renderHook(() => useClips())
     await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
-
-    expect(result.current.discordStatus['a.mp4']).toBe('pending')
 
     act(() => { emitProgress({ mp4Filename: 'a.mp4', percent: 12 }) })
 
@@ -189,7 +212,9 @@ describe('compression events', () => {
   })
 })
 
-describe('openDirectory — same contract as handleDrop', () => {
+// --- openDirectory ---
+
+describe('openDirectory — appends same as handleDrop', () => {
   it('new clips start as pending', async () => {
     vi.mocked(window.electron.openDirectory).mockResolvedValue(
       makeResult(['/dir/a.mp4'])
@@ -210,7 +235,7 @@ describe('openDirectory — same contract as handleDrop', () => {
     expect(result.current.discordStatus['a.mp4']).toBe('ready')
   })
 
-  it('open after drop replaces drop state', async () => {
+  it('open after drop appends, does not replace', async () => {
     vi.mocked(window.electron.loadDropped).mockResolvedValue(makeResult(['/clips/a.mp4']))
     vi.mocked(window.electron.openDirectory).mockResolvedValue(makeResult(['/dir/b.mp4']))
 
@@ -218,12 +243,12 @@ describe('openDirectory — same contract as handleDrop', () => {
     await act(async () => { await result.current.handleDrop(makeDragEvent(['/clips/a.mp4'])) })
     await act(async () => { await result.current.openDirectory() })
 
-    expect(result.current.clips).toHaveLength(1)
-    expect(result.current.clips[0]).toContain('b.mp4')
-    expect(result.current.discordStatus['a.mp4']).toBeUndefined()
+    expect(result.current.clips).toHaveLength(2)
+    expect(result.current.discordStatus['a.mp4']).toBe('pending')
+    expect(result.current.discordStatus['b.mp4']).toBe('pending')
   })
 
-  it('cancelled open dialog (null result) leaves state unchanged', async () => {
+  it('cancelled open dialog leaves state unchanged', async () => {
     vi.mocked(window.electron.openDirectory).mockResolvedValue(null)
     const { result } = renderHook(() => useClips())
     await act(async () => { await result.current.openDirectory() })
