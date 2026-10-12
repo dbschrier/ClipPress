@@ -1,0 +1,26 @@
+appId: com.dbschrier.clippress.staging
+productName: ClipPress Staging
+directories:
+  output: dist-staging
+  buildResources: resources
+icon: resources/logo-256.png
+files:
+  - out/**/*
+asarUnpack:
+  - node_modules/ffmpeg-static/**
+  - node_modules/electron-clipboard-ex/**
+publish:
+  provider: generic
+  url: http://localhost:8080/staging/
+win:
+  artifactName: "${productName}-Setup-${version}.${ext}"
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/logo-256.png
+nsis:
+  oneClick: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
