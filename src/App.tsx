@@ -3,6 +3,7 @@ import { useClips } from './hooks/useClips'
 import { ClipPlayer } from './components/ClipPlayer'
 import type { ClipPlayerHandle } from './components/ClipPlayer'
 import { ClipNavigator } from './components/ClipNavigator'
+import { version } from '../../package.json'
 import './App.css'
 
 export function App() {
@@ -12,6 +13,7 @@ export function App() {
   const [isDragOver, setIsDragOver] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'downloading' | 'ready' | 'error'>('idle')
   const [updatePercent, setUpdatePercent] = useState(0)
+  const [newVersion, setNewVersion] = useState<string | null>(null)
 
   const {
     clips,
@@ -30,9 +32,10 @@ export function App() {
   } = useClips()
 
   useEffect(() => {
-    const unsub = window.electron.onUpdateStatus(({ status, percent, message }) => {
+    const unsub = window.electron.onUpdateStatus(({ status, percent, newVersion: nv, message }) => {
       setUpdateStatus(status)
       if (percent !== undefined) setUpdatePercent(percent)
+      if (nv !== undefined) setNewVersion(nv)
       if (status === 'error') showToast(`Update error: ${message ?? 'unknown'}`)
     })
     return unsub
@@ -96,6 +99,8 @@ export function App() {
         onPrev={goPrev}
         onNext={goNext}
         discordStatus={discordStatus}
+        version={version}
+        newVersion={updateStatus !== 'idle' ? newVersion : null}
       />
       <div className="main" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <ClipPlayer
@@ -112,14 +117,18 @@ export function App() {
         <div className="update-banner">
           {updateStatus === 'downloading' ? (
             <>
-              <span className="update-banner__label">Update downloading… {updatePercent}%</span>
+              <span className="update-banner__label">
+                {newVersion ? `v${version} → v${newVersion}` : 'Update downloading'} {updatePercent}%
+              </span>
               <div className="update-banner__track">
                 <div className="update-banner__fill" style={{ width: `${updatePercent}%` }} />
               </div>
             </>
           ) : (
             <>
-              <span className="update-banner__label">Update ready</span>
+              <span className="update-banner__label">
+                {newVersion ? `v${newVersion} ready` : 'Update ready'}
+              </span>
               <button className="update-banner__btn" onClick={() => window.electron.restartAndInstall()}>
                 Restart
               </button>

@@ -8,6 +8,8 @@ interface ClipNavigatorProps {
   onPrev: () => void
   onNext: () => void
   discordStatus: ShareStatusMap
+  version: string
+  newVersion: string | null
 }
 
 function getFilename(path: string): string {
@@ -21,7 +23,7 @@ const BADGE_LABEL: Record<string, string> = {
   pending: '·',
 }
 
-export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, onNext, discordStatus }: ClipNavigatorProps) {
+export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, onNext, discordStatus, version, newVersion }: ClipNavigatorProps) {
   return (
     <div className="clip-navigator">
       <div className="nav-header">
@@ -59,6 +61,9 @@ export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, o
           {clips.length > 0 ? `${currentIndex + 1} / ${clips.length}` : '—'}
         </span>
         <button onClick={onNext} disabled={currentIndex >= clips.length - 1 || clips.length === 0}>Next →</button>
+      </div>
+      <div className="nav-version">
+        {newVersion ? `v${version} → v${newVersion}` : `v${version}`}
       </div>
     </div>
   )

@@ -288,8 +288,10 @@ app.whenReady().then(() => {
       console.error('[updater] error:', err?.message)
       mainWindow?.webContents.send('app:update-status', { status: 'error', message: err?.message })
     })
-    autoUpdater.on('update-available', () => {
-      console.log('[updater] update available, downloading...')
+    let newVersion: string | null = null
+    autoUpdater.on('update-available', (info) => {
+      newVersion = info.version
+      console.log('[updater] update available:', info.version)
     })
     autoUpdater.on('update-not-available', () => {
       console.log('[updater] already up to date')
@@ -298,10 +300,11 @@ app.whenReady().then(() => {
       mainWindow?.webContents.send('app:update-status', {
         status: 'downloading',
         percent: Math.round(progress.percent),
+        newVersion,
       })
     })
     autoUpdater.on('update-downloaded', () => {
-      mainWindow?.webContents.send('app:update-status', { status: 'ready', percent: 100 })
+      mainWindow?.webContents.send('app:update-status', { status: 'ready', percent: 100, newVersion })
     })
     autoUpdater.checkForUpdates().catch((err) => {
       console.error('[updater] checkForUpdates failed:', err?.message)
