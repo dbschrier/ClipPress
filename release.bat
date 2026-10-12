@@ -1,6 +1,14 @@
 @echo off
 set CHANNEL=%1
 
+echo Running tests...
+call npm test
+if %errorlevel% neq 0 (
+  echo.
+  echo Tests failed. Nothing pushed.
+  exit /b 1
+)
+
 echo Verifying build...
 call npm run build
 if %errorlevel% neq 0 (
