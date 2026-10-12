@@ -55,9 +55,10 @@ export function App() {
     if (curr === 'ready' && prev !== 'ready' && currentFilename) {
       const path = discordPaths[currentFilename]
       if (path) {
+        const wasAlreadyReady = prev === undefined
         window.electron.copyDiscord(path)
-          .then(() => showToast('Compressed — paste into Discord'))
-          .catch(() => showToast('Compression done but clipboard copy failed'))
+          .then(() => showToast(wasAlreadyReady ? 'Copied to clipboard' : 'Compressed — paste into Discord'))
+          .catch(() => showToast('Clipboard copy failed'))
       }
     }
     prevStatusRef.current = { ...discordStatus }

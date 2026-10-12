@@ -74,19 +74,25 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
             style={{ display: filePath ? 'block' : 'none' }}
           />
 
-          {filePath && isConverting && (
+          {filePath && (discordStatus === 'pending' || isConverting) && (
             <div className="compress-overlay">
               <div className="compress-overlay__row">
-                <span className="compress-overlay__label">Compressing</span>
-                <span className="compress-overlay__pct">{progress}%</span>
+                <span className="compress-overlay__label">
+                  {isConverting ? 'Compressing' : 'In queue'}
+                </span>
+                {isConverting && (
+                  <span className="compress-overlay__pct">{progress}%</span>
+                )}
               </div>
-              <div className="compress-overlay__track">
-                <div className="compress-overlay__fill" style={{ width: `${progress}%` }} />
-              </div>
+              {isConverting && (
+                <div className="compress-overlay__track">
+                  <div className="compress-overlay__fill" style={{ width: `${progress}%` }} />
+                </div>
+              )}
             </div>
           )}
 
-          {filePath && !isConverting && (
+          {filePath && (isReady || isError) && (
             <div className={`status-badge status-badge--${statusMod}`}>
               <span className="status-badge__dot" />
               <span>{statusLabel}</span>

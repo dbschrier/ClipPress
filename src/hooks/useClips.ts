@@ -52,6 +52,11 @@ export function useClips() {
 
     progressUnsubscribe.current = window.electron.onCompressProgress(({ mp4Filename, percent }) => {
       setCompressProgress(prev => ({ ...prev, [mp4Filename]: percent }))
+      // If the 'converting' IPC event was missed due to a race with subscription setup,
+      // promote pending → converting when the first progress tick arrives.
+      setDiscordStatus(prev =>
+        prev[mp4Filename] === 'pending' ? { ...prev, [mp4Filename]: 'converting' } : prev
+      )
     })
   }, [])
 
