@@ -16,19 +16,12 @@ function getFilename(path: string): string {
   return (path.split(/[\\/]/).pop() ?? path).replace(/\.mp4$/i, '')
 }
 
-const BADGE_LABEL: Record<string, string> = {
-  ready: 'MP4',
-  converting: '...',
-  error: 'ERR',
-  pending: '·',
-}
-
 export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, onNext, discordStatus, version, newVersion }: ClipNavigatorProps) {
   return (
     <div className="clip-navigator">
       <div className="nav-header">
         <span className="nav-section-label">Clips {clips.length > 0 ? `(${clips.length})` : ''}</span>
-        <button className="open-btn" onClick={onOpen}>Open Folder</button>
+        <button className="open-btn" onClick={onOpen}>Open</button>
       </div>
 
       {clips.length === 0 ? (
@@ -46,9 +39,7 @@ export function ClipNavigator({ clips, currentIndex, onSelect, onOpen, onPrev, o
                 onClick={() => onSelect(i)}
               >
                 <span className="clip-name">{filename}</span>
-                <span className={`share-badge share-badge--${status}`}>
-                  {BADGE_LABEL[status]}
-                </span>
+                <span className={`share-badge share-badge--${status}`} />
               </li>
             )
           })}

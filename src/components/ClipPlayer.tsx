@@ -50,10 +50,10 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
     const isError = discordStatus === 'error'
 
     const statusLabel = isReady
-      ? 'Copied to clipboard — paste into Discord'
+      ? 'Ready — paste into Discord'
       : isError
         ? 'Compression failed'
-        : 'Waiting to compress'
+        : 'Queued'
 
     const statusMod = discordStatus === 'pending' ? 'pending' : discordStatus
 
@@ -65,7 +65,7 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
               <svg className="player-empty__icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <polygon points="22,14 22,86 90,50" fill="#76b900"/>
               </svg>
-              <p>Drop a clip here to get started</p>
+              <p>Drop a clip to compress it for Discord</p>
             </div>
           )}
           <video
@@ -73,29 +73,26 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
             controls
             style={{ display: filePath ? 'block' : 'none' }}
           />
-        </div>
 
-        {filePath && (
-          isConverting ? (
-            <div className="compress-progress">
-              <div className="compress-progress__header">
-                <span className="compress-progress__label">Compressing for Discord</span>
-                <span className="compress-progress__percent">{progress}%</span>
+          {filePath && isConverting && (
+            <div className="compress-overlay">
+              <div className="compress-overlay__row">
+                <span className="compress-overlay__label">Compressing</span>
+                <span className="compress-overlay__pct">{progress}%</span>
               </div>
-              <div className="compress-progress__track">
-                <div
-                  className="compress-progress__fill"
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="compress-overlay__track">
+                <div className="compress-overlay__fill" style={{ width: `${progress}%` }} />
               </div>
             </div>
-          ) : (
-            <div className={`discord-status discord-status--${statusMod}`}>
-              <span className="discord-status__dot" />
+          )}
+
+          {filePath && !isConverting && (
+            <div className={`status-badge status-badge--${statusMod}`}>
+              <span className="status-badge__dot" />
               <span>{statusLabel}</span>
             </div>
-          )
-        )}
+          )}
+        </div>
       </div>
     )
   }

@@ -114,25 +114,21 @@ export function App() {
       </div>
       {toast && <div className="toast">{toast}</div>}
       {updateStatus !== 'idle' && (
-        <div className="update-banner">
+        <div className="update-card">
+          <div className="update-card__title">
+            {updateStatus === 'downloading' ? 'Downloading update' : 'Update ready'}
+          </div>
+          {newVersion && (
+            <div className="update-card__version">v{version} → v{newVersion}</div>
+          )}
           {updateStatus === 'downloading' ? (
-            <>
-              <span className="update-banner__label">
-                {newVersion ? `v${version} → v${newVersion}` : 'Update downloading'} {updatePercent}%
-              </span>
-              <div className="update-banner__track">
-                <div className="update-banner__fill" style={{ width: `${updatePercent}%` }} />
-              </div>
-            </>
+            <div className="update-card__track">
+              <div className="update-card__fill" style={{ width: `${updatePercent}%` }} />
+            </div>
           ) : (
-            <>
-              <span className="update-banner__label">
-                {newVersion ? `v${newVersion} ready` : 'Update ready'}
-              </span>
-              <button className="update-banner__btn" onClick={() => window.electron.restartAndInstall()}>
-                Restart
-              </button>
-            </>
+            <button className="update-card__btn" onClick={() => window.electron.restartAndInstall()}>
+              Restart now
+            </button>
           )}
         </div>
       )}
