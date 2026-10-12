@@ -49,17 +49,13 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
     const isReady = discordStatus === 'ready'
     const isError = discordStatus === 'error'
 
-    const statusLabel = !filePath
-      ? 'Drop a clip here to get started'
-      : isReady
-        ? 'Copied to clipboard — paste into Discord'
-        : isError
-          ? 'Compression failed'
-          : 'Waiting to compress'
+    const statusLabel = isReady
+      ? 'Copied to clipboard — paste into Discord'
+      : isError
+        ? 'Compression failed'
+        : 'Waiting to compress'
 
-    const statusMod = !filePath || discordStatus === 'pending'
-      ? 'idle'
-      : discordStatus
+    const statusMod = discordStatus === 'pending' ? 'pending' : discordStatus
 
     return (
       <div className="clip-player-wrap">
@@ -79,23 +75,26 @@ export const ClipPlayer = forwardRef<ClipPlayerHandle, ClipPlayerProps>(
           />
         </div>
 
-        {isConverting ? (
-          <div className="compress-progress">
-            <div className="compress-progress__header">
-              <span className="compress-progress__label">Compressing for Discord</span>
-              <span className="compress-progress__percent">{progress}%</span>
+        {filePath && (
+          isConverting ? (
+            <div className="compress-progress">
+              <div className="compress-progress__header">
+                <span className="compress-progress__label">Compressing for Discord</span>
+                <span className="compress-progress__percent">{progress}%</span>
+              </div>
+              <div className="compress-progress__track">
+                <div
+                  className="compress-progress__fill"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
-            <div className="compress-progress__track">
-              <div
-                className="compress-progress__fill"
-                style={{ width: `${progress}%` }}
-              />
+          ) : (
+            <div className={`discord-status discord-status--${statusMod}`}>
+              <span className="discord-status__dot" />
+              <span>{statusLabel}</span>
             </div>
-          </div>
-        ) : (
-          <div className={`discord-status discord-status--${statusMod}`}>
-            <span className="discord-status__label">{statusLabel}</span>
-          </div>
+          )
         )}
       </div>
     )

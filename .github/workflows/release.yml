@@ -28,10 +28,12 @@ jobs:
       - name: Build app
         run: npx electron-vite build
 
-      - name: Package installer
-        run: npx electron-builder --publish never
+      - name: Publish release
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release assets
+      - name: Annotate release
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref_name, '-') }}
@@ -48,9 +50,5 @@ jobs:
             Already installed? You'll get this update automatically next time you open the app.
 
             > `latest.yml` and `.exe.blockmap` are used for automatic updates — you don't need to download them.
-          files: |
-            dist/*.exe
-            dist/*.exe.blockmap
-            dist/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
